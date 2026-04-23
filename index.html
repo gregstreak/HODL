@@ -23,7 +23,7 @@
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
   .divider{margin-top:18px;padding-top:14px;border-top:1px solid var(--border)}
-  input[type="date"],input[type="number"],input[type="text"],select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--bg);outline:none;appearance:none;-webkit-appearance:none}
+  input[type="date"],input[type="text"],select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--bg);outline:none;appearance:none;-webkit-appearance:none}
   select{background:var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239c9c94' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;padding-right:36px}
   input:focus,select:focus{border-color:var(--accent)}
   .btn{padding:12px 24px;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:.3px;width:100%}
@@ -135,7 +135,7 @@ const EXCHANGES={
 };
 
 // ─── Helpers ───
-function pf(v){return parseFloat(v)||0}
+function pf(v){return parseFloat(String(v).replace(',','.'))||0}
 function gi(headers,map){const r={};for(const[k,n]of Object.entries(map))r[k]=headers.findIndex(h=>h.toLowerCase().trim()===n.toLowerCase());return r}
 function fZ(n){return n==null?'—':'R '+Math.round(n).toLocaleString('en-ZA')}
 function fU(n){return n==null?'—':'$'+Math.round(n).toLocaleString('en-US')}
@@ -183,9 +183,9 @@ function renderSetup(){const el=document.getElementById('setupCard');if(setupDon
     <div class="serif" style="font-size:26px;margin-bottom:6px">Welcome to HODL</div>
     <p style="font-size:14px;color:var(--sub);line-height:1.6;margin:0 0 24px;max-width:320px;margin-left:auto;margin-right:auto">Your Bitcoin position in rand — clearly, without noise. Enter your current BTC balances to get started.</p>
     <div style="text-align:left;display:flex;flex-direction:column;gap:12px;max-width:300px;margin:0 auto">
-      <div><div style="font-size:12px;color:var(--sub);margin-bottom:3px">Hardware wallet (Ledger, Trezor, etc.)</div><input type="number" id="sLedger" placeholder="e.g. 0.38291500" inputmode="decimal" step="0.00000001"></div>
-      <div><div style="font-size:12px;color:var(--sub);margin-bottom:3px">Exchange balance (VALR, Luno, etc.)</div><input type="number" id="sValr" placeholder="e.g. 0.02937900" inputmode="decimal" step="0.00000001"></div>
-      <div><div style="font-size:12px;color:var(--sub);margin-bottom:3px">Other wallets (optional)</div><input type="number" id="sOther" placeholder="e.g. 0.00000000" inputmode="decimal" step="0.00000001"></div>
+      <div><div style="font-size:12px;color:var(--sub);margin-bottom:3px">Hardware wallet (Ledger, Trezor, etc.)</div><input type="text" inputmode="decimal" autocomplete="off" autocorrect="off" spellcheck="false" id="sLedger" placeholder="e.g. 0.38291500"></div>
+      <div><div style="font-size:12px;color:var(--sub);margin-bottom:3px">Exchange balance (VALR, Luno, etc.)</div><input type="text" inputmode="decimal" autocomplete="off" autocorrect="off" spellcheck="false" id="sValr" placeholder="e.g. 0.02937900"></div>
+      <div><div style="font-size:12px;color:var(--sub);margin-bottom:3px">Other wallets (optional)</div><input type="text" inputmode="decimal" autocomplete="off" autocorrect="off" spellcheck="false" id="sOther" placeholder="e.g. 0.00000000"></div>
       <button class="btn btn-primary" onclick="completeSetup()" style="margin-top:4px">Set Up My Dashboard</button>
     </div>
     <p style="font-size:11px;color:var(--muted);margin-top:16px;line-height:1.4">Your data stays on this device. Nothing is sent anywhere.</p>
@@ -248,8 +248,8 @@ function renderImport(){const el=document.getElementById('importCard');if(curren
         <div style="font-size:11px;color:var(--muted);margin-bottom:12px">${typeDescs[manualType]}</div>
         <div style="display:flex;flex-direction:column;gap:10px">
           <div><div style="font-size:12px;color:var(--sub);margin-bottom:3px">Date</div><input type="date" id="mDate" value="${new Date().toISOString().split('T')[0]}"></div>
-          <div><div style="font-size:12px;color:var(--sub);margin-bottom:3px">BTC amount</div><input type="number" id="mBtc" placeholder="e.g. 0.00350000" inputmode="decimal" step="0.00000001"></div>
-          ${manualType==='purchased'?'<div><div style="font-size:12px;color:var(--sub);margin-bottom:3px">Amount spent (ZAR)</div><input type="number" id="mZar" placeholder="e.g. 5000" inputmode="decimal"></div>':''}
+          <div><div style="font-size:12px;color:var(--sub);margin-bottom:3px">BTC amount</div><input type="text" inputmode="decimal" autocomplete="off" autocorrect="off" spellcheck="false" id="mBtc" placeholder="e.g. 0.00350000"></div>
+          ${manualType==='purchased'?'<div><div style="font-size:12px;color:var(--sub);margin-bottom:3px">Amount spent (ZAR)</div><input type="text" inputmode="decimal" autocomplete="off" autocorrect="off" spellcheck="false" id="mZar" placeholder="e.g. 5000"></div>':''}
           ${manualType==='received'?'<div><div style="font-size:12px;color:var(--sub);margin-bottom:3px">From (optional)</div><input type="text" id="mFrom" placeholder="e.g. Client name, mining"></div>':''}
           ${manualType==='sent'?'<div><div style="font-size:12px;color:var(--sub);margin-bottom:3px">To (optional)</div><input type="text" id="mTo" placeholder="e.g. Recipient name"></div>':''}
           <button class="btn btn-primary" onclick="addManualTx()">Add ${typeLabels[manualType]}</button></div></div></div>`}

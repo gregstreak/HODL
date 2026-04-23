@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>HODL — Bitcoin Tracker</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#1a1a18">
+<meta name="apple-mobile-web-app-title" content="HODL">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  :root{--bg:#faf9f6;--card:#fff;--text:#1a1a18;--sub:#5c5c56;--muted:#9c9c94;--border:rgba(120,120,110,.12);--accent:#b45309;--accent-soft:rgba(180,83,9,.06);--pos:#15803d;--neg:#b91c1c;--pos-soft:rgba(21,128,61,.06);--neg-soft:rgba(185,28,28,.06);--received:#7c3aed;--received-soft:rgba(124,58,237,.06)}
+  body{background:var(--bg);font-family:'DM Sans','Helvetica Neue',sans-serif;color:var(--text)}
+  .wrap{max-width:460px;margin:0 auto;padding:28px 20px 40px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:24px;margin-bottom:14px}
+  .label{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+  .mono{font-family:'JetBrains Mono',monospace}.serif{font-family:'Instrument Serif',serif}
+  .row{display:flex;justify-content:space-between;align-items:flex-start}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .divider{margin-top:18px;padding-top:14px;border-top:1px solid var(--border)}
+  input[type="date"],input[type="number"],input[type="text"],select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:15px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--bg);outline:none;appearance:none;-webkit-appearance:none}
+  select{background:var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239c9c94' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;padding-right:36px}
+  input:focus,select:focus{border-color:var(--accent)}
+  .btn{padding:12px 24px;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:.3px;width:100%}
+  .btn-primary{background:var(--text);color:var(--bg)}.btn-accent{background:var(--accent-soft);color:var(--accent);border:1px solid rgba(180,83,9,.15)}
+  .btn-ghost{background:none;border:1px solid var(--border);color:var(--sub)}
+  .btn-small{padding:5px 10px;width:auto;font-size:11px;font-family:'JetBrains Mono',monospace;letter-spacing:.5px}
+  .btn:disabled{opacity:.4;cursor:default}
+  .entry-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0}
+  .entry-row+.entry-row{border-top:1px solid var(--border)}
+  .hidden{display:none}
+  .footer{text-align:center;padding:16px 0 0;font-size:10px;color:var(--muted)}
+  .pos{color:var(--pos)}.neg{color:var(--neg)}
+  .cycle-bar{height:6px;background:rgba(120,120,110,.06);border-radius:3px;position:relative}
+  .cycle-seg{position:absolute;top:0;bottom:0}
+  .cycle-dot{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;border:2px solid var(--card);transform:translateX(-6px)}
+  .storage-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0}
+  .storage-row+.storage-row{border-top:1px solid var(--border)}
+  .storage-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:12px}
+  .storage-fill{height:100%;border-radius:2px}
+  .eye-btn{background:none;border:none;cursor:pointer;padding:4px;color:var(--muted);display:flex;align-items:center}
+  .eye-btn:hover{color:var(--text)}.eye-btn svg{width:20px;height:20px}
+  .header-controls{display:flex;align-items:center;gap:8px}
+  .import-zone{border:2px dashed var(--border);border-radius:8px;padding:28px 24px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
+  .import-zone:hover,.import-zone.drag-over{border-color:var(--accent);background:var(--accent-soft)}
+  .import-zone input[type="file"]{display:none}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:12px 20px;border-radius:8px;font-size:13px;font-weight:500;z-index:100;opacity:0;transition:opacity .3s;pointer-events:none;max-width:340px;text-align:center}
+  .toast.show{opacity:1}
+  .import-option{padding:16px;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color .2s,background .2s;margin-bottom:10px}
+  .import-option:hover{border-color:var(--accent);background:var(--accent-soft)}
+  .import-option.active{border-color:var(--accent);background:var(--accent-soft)}
+  .col-btn{display:inline-block;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-family:'JetBrains Mono',monospace;cursor:pointer;margin:2px;transition:all .2s;white-space:nowrap}
+  .col-btn:hover{border-color:var(--accent)}
+  .preview-table{width:100%;font-size:11px;border-collapse:collapse;margin:12px 0;overflow-x:auto;display:block}
+  .preview-table th,.preview-table td{padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+  .preview-table th{color:var(--muted);font-weight:500;font-family:'JetBrains Mono',monospace;font-size:10px}
+  .help-text{font-size:12px;color:var(--sub);line-height:1.5;margin-top:8px}
+  .tab-bar{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px}
+  .tab{padding:10px 16px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s}
+  .tab.active{color:var(--text);border-bottom-color:var(--accent)}.tab:hover{color:var(--text)}
+  .type-badge{display:inline-block;padding:2px 6px;border-radius:3px;font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:.5px;font-weight:600}
+  .type-badge.purchased{background:var(--accent-soft);color:var(--accent)}
+  .type-badge.received{background:var(--received-soft);color:var(--received)}
+  .type-badge.sent{background:var(--neg-soft);color:var(--neg)}
+  .ss-mark{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+  .ss-mark span{font-size:10px;color:var(--muted);letter-spacing:.3px}
+  .ss-dot{width:4px;height:4px;border-radius:50%;background:var(--accent);opacity:.6}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div style="margin-bottom:28px">
+    <div class="row" style="align-items:center">
+      <h1 class="mono" style="font-size:20px;font-weight:700;letter-spacing:3px">HODL</h1>
+      <div class="header-controls">
+        <button class="eye-btn" onclick="togglePrivacy()">
+          <svg id="eyeOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg id="eyeClosed" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </button>
+        <button id="toggleBtn" class="btn btn-ghost btn-small hidden" onclick="toggleView()">HISTORY</button>
+      </div>
+    </div>
+    <div style="width:32px;height:2px;background:var(--accent);margin-top:8px"></div>
+  </div>
+  <div class="card" id="priceCard"><div class="mono" style="font-size:13px;color:var(--muted)">Fetching price…</div></div>
+  <div class="card hidden" id="holdingsCard"></div>
+  <div id="setupCard"></div>
+  <div class="card hidden" id="importCard"></div>
+  <div class="card hidden" id="txList"></div>
+  <div class="card" id="cycleCard"></div>
+  <div class="footer">
+    <div id="errorMsg" style="color:var(--accent);margin-bottom:6px"></div>
+    <div id="footerText">Not financial advice · Bitcoin only</div>
+    <div class="ss-mark"><div class="ss-dot"></div><span>by Signal & Seed</span><div class="ss-dot"></div></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── State ───
+let holdings={ledger:0,valr:0,other:0,get total(){return this.ledger+this.valr+this.other}};
+let transactions=[];
+let priceData=null,currentView='dash',privacyOn=false,historyTab='all',manualType='purchased';
+let importState={step:'choose',headers:[],rows:[],mapping:{date:-1,spent:-1,btc:-1},selectingField:null};
+let setupDone=false;
+
+// ─── Storage ───
+function save(){try{localStorage.setItem('hodl-data',JSON.stringify({holdings,transactions,setupDone}))}catch{}}
+function load(){try{const d=JSON.parse(localStorage.getItem('hodl-data'));if(d){holdings=d.holdings||holdings;transactions=d.transactions||[];setupDone=d.setupDone||false;if(holdings.other===undefined)holdings.other=0}}catch{}}
+
+// ─── Exchange Parsers ───
+const EXCHANGES={
+  valr:{name:'VALR',detect:h=>h.includes('trade currency pair')&&h.includes('debit currency'),help:'Transactions → Filter by BTC → Download CSV',
+    parse(rows,hd){const i=gi(hd,{date:'date',type:'transaction type',dc:'debit currency',dv:'debit value',cc:'credit currency',cv:'credit value',p:'trade price'});
+      return rows.filter(r=>r[i.type]==='Simple Buy'&&r[i.dc]==='ZAR'&&r[i.cc]==='BTC').map(r=>({type:'purchased',date:r[i.date].substring(0,10),zarSpent:pf(r[i.dv]),btc:pf(r[i.cv]),price:Math.round(pf(r[i.p]))})).filter(e=>e.btc>0)}},
+  luno:{name:'Luno',detect:h=>h.includes('row_index')||(h.includes('type')&&h.includes('balance_delta')),help:'Settings → Statement → Download CSV',
+    parse(rows,hd){const i=gi(hd,{date:'timestamp',side:'side',amount:'amount',price:'price'});if(i.date===-1){const i2=gi(hd,{date:'created_at',type:'type',cur:'currency',delta:'balance_delta'});
+      return rows.filter(r=>r[i2.type]==='BUY'&&r[i2.cur]==='XBT').map(r=>({type:'purchased',date:r[i2.date].substring(0,10),zarSpent:0,btc:Math.abs(pf(r[i2.delta])),price:0})).filter(e=>e.btc>0)}
+      return rows.filter(r=>r[i.side]==='BUY').map(r=>{const b=Math.abs(pf(r[i.amount])),p=pf(r[i.price]);return{type:'purchased',date:r[i.date].substring(0,10),zarSpent:b*p,btc:b,price:Math.round(p)}}).filter(e=>e.btc>0)}},
+  coinbase:{name:'Coinbase',detect:h=>h.includes('spot price currency')||(h.includes('asset')&&h.includes('spot price')),help:'Taxes → Transaction history → Generate report',
+    parse(rows,hd){const i=gi(hd,{date:'timestamp',type:'transaction type',asset:'asset',qty:'quantity transacted',spot:'spot price',total:'total'});
+      return rows.filter(r=>(r[i.type]==='Buy'||r[i.type]==='Advanced Trade Buy')&&r[i.asset]==='BTC').map(r=>{const b=pf(r[i.qty]),s=pf(r[i.total])||b*pf(r[i.spot]);return{type:'purchased',date:r[i.date].substring(0,10),zarSpent:s,btc:b,price:Math.round(s/b)}}).filter(e=>e.btc>0)}},
+  kraken:{name:'Kraken',detect:h=>h.includes('txid')&&h.includes('refid')&&h.includes('aclass'),help:'History → Export → Select Ledgers',
+    parse(rows,hd){const i=gi(hd,{date:'time',type:'type',asset:'asset',amount:'amount'});
+      return rows.filter(r=>r[i.type]==='trade'&&['XXBT','XBT','BTC'].includes(r[i.asset])&&pf(r[i.amount])>0).map(r=>({type:'purchased',date:r[i.date].substring(0,10),zarSpent:0,btc:pf(r[i.amount]),price:0})).filter(e=>e.btc>0)}},
+  binance:{name:'Binance',detect:h=>h.includes('operation')||(h.includes('pair')&&h.includes('executed')),help:'Orders → Trade History → Export',
+    parse(rows,hd){const i=gi(hd,{date:'date(utc)',pair:'pair',side:'side',price:'price',exec:'executed',amt:'amount'});if(i.date===-1){const i2=gi(hd,{date:'utc_time',op:'operation',coin:'coin',ch:'change'});
+      return rows.filter(r=>r[i2.op]==='Buy'&&r[i2.coin]==='BTC').map(r=>({type:'purchased',date:r[i2.date].substring(0,10),zarSpent:0,btc:Math.abs(pf(r[i2.ch])),price:0})).filter(e=>e.btc>0)}
+      return rows.filter(r=>r[i.side]==='BUY'&&r[i.pair]?.startsWith('BTC')).map(r=>({type:'purchased',date:r[i.date].substring(0,10),zarSpent:pf(r[i.amt]),btc:pf(r[i.exec]),price:Math.round(pf(r[i.price]))})).filter(e=>e.btc>0)}}
+};
+
+// ─── Helpers ───
+function pf(v){return parseFloat(v)||0}
+function gi(headers,map){const r={};for(const[k,n]of Object.entries(map))r[k]=headers.findIndex(h=>h.toLowerCase().trim()===n.toLowerCase());return r}
+function fZ(n){return n==null?'—':'R '+Math.round(n).toLocaleString('en-ZA')}
+function fU(n){return n==null?'—':'$'+Math.round(n).toLocaleString('en-US')}
+function fP(n){return n==null?'—':(n>=0?'+':'')+n.toFixed(1)+'%'}
+function fD(d){return new Date(d+'T12:00:00').toLocaleDateString('en-ZA',{day:'numeric',month:'short',year:'numeric'})}
+function pr(val){return privacyOn?'• • • • •':val}
+function getPurchases(){return transactions.filter(t=>t.type==='purchased')}
+function getReceived(){return transactions.filter(t=>t.type==='received')}
+function getSent(){return transactions.filter(t=>t.type==='sent')}
+function getTI(){return getPurchases().reduce((s,e)=>s+e.zarSpent,0)}
+function togglePrivacy(){privacyOn=!privacyOn;document.getElementById('eyeOpen').classList.toggle('hidden',privacyOn);document.getElementById('eyeClosed').classList.toggle('hidden',!privacyOn);renderAll()}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+
+// ─── CSV ───
+function parseCSV(text){const lines=text.replace(/\r/g,'').split('\n').filter(l=>l.trim());if(lines.length<2)return{headers:[],rows:[]};let s=0;while(s<lines.length&&!lines[s].includes(','))s++;if(s>=lines.length)s=0;const headers=lines[s].split(',').map(h=>h.trim().replace(/^"|"$/g,''));const rows=[];for(let i=s+1;i<lines.length;i++){const cols=[];let cur='',inQ=false;for(let c=0;c<lines[i].length;c++){const ch=lines[i][c];if(ch==='"')inQ=!inQ;else if(ch===','&&!inQ){cols.push(cur.trim());cur=''}else cur+=ch}cols.push(cur.trim());if(cols.length>=headers.length-1)rows.push(cols)}return{headers,rows}}
+function detectExchange(h){const s=h.map(x=>x.toLowerCase()).join(',');for(const[k,ex]of Object.entries(EXCHANGES))if(ex.detect(s))return k;return null}
+function handleExFile(file,key){const r=new FileReader;r.onload=e=>{const{headers,rows}=parseCSV(e.target.result);if(!rows.length){showToast('Could not read CSV.');return}try{const p=EXCHANGES[key].parse(rows,headers);if(!p.length){showToast('No BTC purchases found.');return}transactions=transactions.filter(t=>t.type!=='purchased').concat(p);save();showToast(`Imported ${p.length} purchases from ${EXCHANGES[key].name}`);importState.step='choose';currentView='dash';document.getElementById('toggleBtn').textContent='HISTORY';renderAll()}catch{showToast('Error parsing file.')}};r.readAsText(file)}
+function handleGenFile(file){const r=new FileReader;r.onload=e=>{const{headers,rows}=parseCSV(e.target.result);if(!rows.length){showToast('Could not read CSV.');return}const det=detectExchange(headers);if(det){try{const p=EXCHANGES[det].parse(rows,headers);if(p.length){transactions=transactions.filter(t=>t.type!=='purchased').concat(p);save();showToast(`Detected ${EXCHANGES[det].name} — imported ${p.length} purchases`);importState.step='choose';currentView='dash';document.getElementById('toggleBtn').textContent='HISTORY';renderAll();return}}catch{}}importState.headers=headers;importState.rows=rows;importState.mapping={date:-1,spent:-1,btc:-1};importState.selectingField=null;importState.step='map';renderAll()};r.readAsText(file)}
+function selectColumn(i){if(!importState.selectingField)return;importState.mapping[importState.selectingField]=i;importState.selectingField=null;renderAll()}
+function finishMapping(){const{rows,mapping}=importState;if(mapping.date===-1||mapping.btc===-1){showToast('Map at least Date and BTC Received.');return}const parsed=[];for(const row of rows){const d=(row[mapping.date]||'').substring(0,10),b=Math.abs(pf(row[mapping.btc])),s=mapping.spent>=0?Math.abs(pf(row[mapping.spent])):0;if(b>0&&d.length>=8)parsed.push({type:'purchased',date:d,zarSpent:s,btc:b,price:s>0&&b>0?Math.round(s/b):0})}if(!parsed.length){showToast('No valid entries found.');return}transactions=transactions.filter(t=>t.type!=='purchased').concat(parsed);save();showToast(`Imported ${parsed.length} purchases`);importState.step='choose';currentView='dash';document.getElementById('toggleBtn').textContent='HISTORY';renderAll()}
+
+function addManualTx(){const type=manualType,date=document.getElementById('mDate').value,btc=pf(document.getElementById('mBtc').value);if(!date||btc<=0){showToast('Enter date and BTC amount.');return}
+  if(type==='purchased'){const zar=pf(document.getElementById('mZar').value);transactions.push({type:'purchased',date,zarSpent:zar,btc,price:zar>0?Math.round(zar/btc):0})}
+  else if(type==='received'){const from=document.getElementById('mFrom')?.value||'';transactions.push({type:'received',date,btc,from,marketValue:priceData?.zar?btc*priceData.zar:0,priceAtReceipt:priceData?.zar||0})}
+  else if(type==='sent'){const to=document.getElementById('mTo')?.value||'';transactions.push({type:'sent',date,btc,to})}
+  save();showToast(`${type.charAt(0).toUpperCase()+type.slice(1)} entry added`);document.getElementById('mBtc').value='';
+  if(document.getElementById('mZar'))document.getElementById('mZar').value='';if(document.getElementById('mFrom'))document.getElementById('mFrom').value='';if(document.getElementById('mTo'))document.getElementById('mTo').value='';renderAll()}
+
+function completeSetup(){
+  const l=pf(document.getElementById('sLedger')?.value);const v=pf(document.getElementById('sValr')?.value);const o=pf(document.getElementById('sOther')?.value);
+  if(l<=0&&v<=0&&o<=0){showToast('Enter at least one BTC balance.');return}
+  holdings.ledger=l;holdings.valr=v;holdings.other=o;setupDone=true;save();
+  document.getElementById('toggleBtn').classList.remove('hidden');renderAll()}
+
+// ─── Cycle ───
+function getCycle(){const now=new Date,last=new Date('2024-04-20'),next=new Date('2028-03-15'),total=(next-last)/864e5,elapsed=(now-last)/864e5;return{pct:Math.min(elapsed/total*100,100),daysToNext:Math.max(Math.round((next-now)/864e5),0)}}
+function getPhase(p){if(p<25)return{label:'Accumulation',desc:'Post-halving consolidation. Historically the quietest phase — and the best entry window.',color:'#2563eb'};if(p<50)return{label:'Early Expansion',desc:'Supply shock starts to bite. Gradual upward pressure as reduced issuance meets steady demand.',color:'#059669'};if(p<75)return{label:'Bull Run',desc:'Historically the strongest gains. Momentum builds as demand outpaces new supply.',color:'#d97706'};return{label:'Late Cycle',desc:'Peak volatility. Previous cycles topped and corrected sharply in this window.',color:'#dc2626'}}
+
+// ─── Render ───
+function renderPrice(){const el=document.getElementById('priceCard');if(!priceData)return;const zc=priceData.zar_24h_change||0,uc=priceData.usd_24h_change||0,sats=priceData.zar?Math.round(1e8/priceData.zar).toLocaleString():'—';
+  el.innerHTML=`<div class="row"><div><div class="label">BTC / ZAR</div><div class="serif" style="font-size:36px;line-height:1;letter-spacing:-1px;margin-top:6px">${fZ(priceData.zar)}</div></div><div style="text-align:right;padding-top:16px"><span class="mono ${zc>=0?'pos':'neg'}" style="font-size:13px;font-weight:600">${fP(zc)}</span><div style="font-size:10px;color:var(--muted);margin-top:2px">24h</div></div></div><div class="divider" style="display:flex;gap:24px"><div><div class="label" style="margin-bottom:3px">USD</div><span class="mono" style="font-size:14px;font-weight:500">${fU(priceData.usd)}</span><span class="mono ${uc>=0?'pos':'neg'}" style="font-size:11px;margin-left:6px">${fP(uc)}</span></div><div><div class="label" style="margin-bottom:3px">SATS / RAND</div><span class="mono" style="font-size:14px;font-weight:500">${sats}</span></div></div>`}
+
+function renderSetup(){const el=document.getElementById('setupCard');if(setupDone||currentView==='log'){el.innerHTML='';return}
+  el.innerHTML=`<div class="card" style="text-align:center;padding:36px 24px">
+    <div class="serif" style="font-size:26px;margin-bottom:6px">Welcome to HODL</div>
+    <p style="font-size:14px;color:var(--sub);line-height:1.6;margin:0 0 24px;max-width:320px;margin-left:auto;margin-right:auto">Your Bitcoin position in rand — clearly, without noise. Enter your current BTC balances to get started.</p>
+    <div style="text-align:left;display:flex;flex-direction:column;gap:12px;max-width:300px;margin:0 auto">
+      <div><div style="font-size:12px;color:var(--sub);margin-bottom:3px">Hardware wallet (Ledger, Trezor, etc.)</div><input type="number" id="sLedger" placeholder="e.g. 0.38291500" inputmode="decimal" step="0.00000001"></div>
+      <div><div style="font-size:12px;color:var(--sub);margin-bottom:3px">Exchange balance (VALR, Luno, etc.)</div><input type="number" id="sValr" placeholder="e.g. 0.02937900" inputmode="decimal" step="0.00000001"></div>
+      <div><div style="font-size:12px;color:var(--sub);margin-bottom:3px">Other wallets (optional)</div><input type="number" id="sOther" placeholder="e.g. 0.00000000" inputmode="decimal" step="0.00000001"></div>
+      <button class="btn btn-primary" onclick="completeSetup()" style="margin-top:4px">Set Up My Dashboard</button>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-top:16px;line-height:1.4">Your data stays on this device. Nothing is sent anywhere.</p>
+  </div>`}
+
+function renderHoldings(){const el=document.getElementById('holdingsCard');if(!priceData?.zar||currentView!=='dash'||!setupDone){el.classList.add('hidden');return}el.classList.remove('hidden');
+  const ti=getTI(),cv=holdings.total*priceData.zar,pl=cv-ti,rp=ti>0?((cv-ti)/ti)*100:0,isUp=rp>=0;
+  const ap=holdings.total>0&&ti>0?ti/holdings.total:0;
+  const purchases=getPurchases(),received=getReceived(),sent=getSent();
+  const byP=[...purchases].filter(e=>e.price>0).sort((a,b)=>a.price-b.price);
+  const totalRcv=received.reduce((s,e)=>s+e.btc,0);
+
+  el.style.background=isUp?'var(--pos-soft)':'var(--neg-soft)';el.style.borderColor=isUp?'rgba(21,128,61,.12)':'rgba(185,28,28,.12)';
+  let html=`<div class="label">Your Position · ${pr(holdings.total.toFixed(6)+' BTC')}</div>
+    <div class="row" style="align-items:baseline;margin-top:8px"><div class="serif" style="font-size:32px;line-height:1;letter-spacing:-.5px">${pr(fZ(cv))}</div>`;
+  if(ti>0) html+=`<div class="mono ${isUp?'pos':'neg'}" style="font-size:16px;font-weight:700">${pr(fP(rp))}</div>`;
+  html+=`</div>`;
+  if(ti>0) html+=`<div class="mono ${isUp?'pos':'neg'}" style="font-size:13px;margin-top:6px">${pr((isUp?'+':'')+fZ(pl)+' '+(isUp?'profit':'loss'))}</div>`;
+
+  // Storage breakdown
+  const parts=[];
+  if(holdings.ledger>0)parts.push({name:'Ledger',btc:holdings.ledger});
+  if(holdings.valr>0)parts.push({name:'Exchange',btc:holdings.valr});
+  if(holdings.other>0)parts.push({name:'Other',btc:holdings.other});
+  if(parts.length>1){
+    html+=`<div class="divider">`;
+    parts.forEach(p=>{const pv=p.btc*priceData.zar;const pp=(p.btc/holdings.total)*100;
+      html+=`<div class="storage-row"><div><div style="font-size:12px;font-weight:500">${p.name}</div><div class="mono" style="font-size:11px;color:var(--muted);margin-top:1px">${pr(p.btc.toFixed(6)+' BTC')}</div></div><div class="mono" style="font-size:13px;font-weight:500">${pr(fZ(pv))}</div></div>`});
+    if(parts.length===2){const pp=(parts[0].btc/holdings.total)*100;
+      html+=`<div class="storage-bar"><div class="storage-fill" style="width:${pp}%;background:var(--accent)"></div></div><div style="display:flex;justify-content:space-between;margin-top:4px"><span style="font-size:9px;color:var(--muted)">${parts[0].name} ${Math.round(pp)}%</span><span style="font-size:9px;color:var(--muted)">${parts[1].name} ${Math.round(100-pp)}%</span></div>`}
+    html+=`</div>`}
+
+  html+=`<div class="grid3" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">`;
+  if(ti>0) html+=`<div><div class="label">Invested</div><div class="mono" style="font-size:13px;font-weight:500;margin-top:3px">${pr(fZ(ti))}</div></div><div><div class="label">Avg Price</div><div class="mono" style="font-size:13px;font-weight:500;margin-top:3px">${pr(fZ(ap))}</div></div>`;
+  else html+=`<div></div><div></div>`;
+  html+=`<div><div class="label">Purchases</div><div class="mono" style="font-size:13px;font-weight:500;margin-top:3px">${purchases.length}</div></div></div>`;
+
+  if(totalRcv>0) html+=`<div style="margin-top:12px"><div class="label">Received</div><div class="mono" style="font-size:12px;font-weight:500;margin-top:3px;color:var(--received)">${pr(totalRcv.toFixed(6)+' BTC')}</div></div>`;
+  if(byP.length) html+=`<div class="grid2" style="margin-top:12px"><div><div class="label">Best Buy</div><div class="mono" style="font-size:12px;font-weight:500;margin-top:3px">${pr(fZ(byP[0].price))}</div><div style="font-size:10px;color:var(--muted)">${fD(byP[0].date)}</div></div><div><div class="label">Highest Buy</div><div class="mono" style="font-size:12px;font-weight:500;margin-top:3px">${pr(fZ(byP[byP.length-1].price))}</div><div style="font-size:10px;color:var(--muted)">${fD(byP[byP.length-1].date)}</div></div></div>`;
+
+  el.innerHTML=html}
+
+function renderImport(){const el=document.getElementById('importCard');if(currentView!=='log'){el.classList.add('hidden');return}el.classList.remove('hidden');
+  if(importState.step==='map'){const{headers,rows,mapping,selectingField:sf}=importState;const preview=rows.slice(0,3);const fL={date:'Date',spent:'Amount Spent',btc:'BTC Received'};const fC={date:'#2563eb',spent:'#059669',btc:'#b45309'};
+    let h=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><div class="label" style="margin:0">Map Your Columns</div><button class="btn btn-ghost btn-small" onclick="importState.step='choose';renderAll()">Back</button></div><p class="help-text" style="margin-top:0;margin-bottom:16px">Tap a field, then tap the matching column.</p><div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">`;
+    for(const[f,l]of Object.entries(fL)){const a=mapping[f]>=0,s=sf===f,c=fC[f];h+=`<div onclick="importState.selectingField='${f}';renderAll()" style="padding:8px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;border:2px solid ${s?c:a?c+'44':'var(--border)'};background:${s?c+'15':a?c+'08':'transparent'};color:${a||s?c:'var(--sub)'}">${l}${a?': '+headers[mapping[f]]:s?' ← pick':''}</div>`}
+    h+='</div><div style="margin-bottom:12px;overflow-x:auto;white-space:nowrap;padding-bottom:4px">';headers.forEach((hd,i)=>{let at=null;for(const[f,idx]of Object.entries(mapping))if(idx===i)at=f;h+=`<span class="col-btn" onclick="selectColumn(${i})" style="${at?'background:'+fC[at]+';color:white;border-color:'+fC[at]+';':sf?'border-color:var(--accent);':''}">${hd}</span>`});
+    h+='</div><table class="preview-table"><tr>';headers.forEach((hd,i)=>{let at=null;for(const[f,idx]of Object.entries(mapping))if(idx===i)at=f;h+=`<th style="${at?'color:'+fC[at]+';font-weight:700;':''}">${hd}</th>`});h+='</tr>';preview.forEach(row=>{h+='<tr>';row.forEach((c,i)=>{let at=null;for(const[f,idx]of Object.entries(mapping))if(idx===i)at=f;h+=`<td class="mono" style="font-size:10px;${at?'color:'+fC[at]+';font-weight:600;':''}">${c}</td>`});h+='</tr>'});h+='</table>';
+    const ok=mapping.date>=0&&mapping.btc>=0;h+=`<button class="btn btn-primary" onclick="finishMapping()" ${ok?'':'disabled'} style="margin-top:8px">Import ${rows.length} Rows</button>`;if(!ok)h+='<p class="help-text">Map at least Date and BTC Received.</p>';el.innerHTML=h;return}
+
+  const typeOpts=['purchased','received','sent'];const typeLabels={purchased:'Purchased',received:'Received',sent:'Sent'};const typeDescs={purchased:'Bought on an exchange or peer-to-peer',received:'Payment, gift, mining reward, or airdrop',sent:'Sent to someone as payment'};const typeColors={purchased:'var(--accent)',received:'var(--received)',sent:'var(--neg)'};
+
+  el.innerHTML=`<div class="label" style="margin-bottom:16px">Import & Log</div>
+    <div class="import-option" id="opt1" onclick="document.getElementById('exSel').classList.toggle('hidden');this.classList.toggle('active')"><div style="display:flex;align-items:center;gap:10px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg><div><div style="font-size:14px;font-weight:600">Select your exchange</div><div style="font-size:12px;color:var(--muted);margin-top:2px">VALR, Luno, Coinbase, Kraken, Binance</div></div></div>
+      <div id="exSel" class="hidden" style="margin-top:14px" onclick="event.stopPropagation()"><select id="exP" style="margin-bottom:10px" onchange="document.getElementById('exH').textContent=EXCHANGES[this.value]?.help||''"><option value="" disabled selected>Choose exchange…</option>${Object.entries(EXCHANGES).map(([k,x])=>`<option value="${k}">${x.name}</option>`).join('')}</select><div id="exH" class="help-text" style="margin-bottom:10px"></div><div class="import-zone" onclick="event.stopPropagation();document.getElementById('exF').click()"><input type="file" id="exF" accept=".csv" onchange="const ex=document.getElementById('exP').value;if(!ex){showToast('Select an exchange first');return}handleExFile(this.files[0],ex)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><div style="font-size:13px;font-weight:500">Upload CSV</div></div></div></div>
+    <div class="import-option" onclick="event.stopPropagation();document.getElementById('gF').click()"><input type="file" id="gF" accept=".csv" style="display:none" onchange="handleGenFile(this.files[0])"><div style="display:flex;align-items:center;gap:10px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><div><div style="font-size:14px;font-weight:600">Other exchange</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Upload any CSV — map columns yourself</div></div></div></div>
+    <div class="import-option" onclick="document.getElementById('mF').classList.toggle('hidden');this.classList.toggle('active')"><div style="display:flex;align-items:center;gap:10px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg><div><div style="font-size:14px;font-weight:600">Add manually</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Log a purchase, received BTC, or sent BTC</div></div></div>
+      <div id="mF" class="hidden" style="margin-top:14px" onclick="event.stopPropagation()">
+        <div style="display:flex;gap:6px;margin-bottom:14px">${typeOpts.map(t=>`<div onclick="manualType='${t}';renderAll()" style="flex:1;padding:8px;text-align:center;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid ${manualType===t?typeColors[t]:'var(--border)'};color:${manualType===t?typeColors[t]:'var(--muted)'};background:${manualType===t?typeColors[t]+'10':'transparent'}">${typeLabels[t]}</div>`).join('')}</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:12px">${typeDescs[manualType]}</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div><div style="font-size:12px;color:var(--sub);margin-bottom:3px">Date</div><input type="date" id="mDate" value="${new Date().toISOString().split('T')[0]}"></div>
+          <div><div style="font-size:12px;color:var(--sub);margin-bottom:3px">BTC amount</div><input type="number" id="mBtc" placeholder="e.g. 0.00350000" inputmode="decimal" step="0.00000001"></div>
+          ${manualType==='purchased'?'<div><div style="font-size:12px;color:var(--sub);margin-bottom:3px">Amount spent (ZAR)</div><input type="number" id="mZar" placeholder="e.g. 5000" inputmode="decimal"></div>':''}
+          ${manualType==='received'?'<div><div style="font-size:12px;color:var(--sub);margin-bottom:3px">From (optional)</div><input type="text" id="mFrom" placeholder="e.g. Client name, mining"></div>':''}
+          ${manualType==='sent'?'<div><div style="font-size:12px;color:var(--sub);margin-bottom:3px">To (optional)</div><input type="text" id="mTo" placeholder="e.g. Recipient name"></div>':''}
+          <button class="btn btn-primary" onclick="addManualTx()">Add ${typeLabels[manualType]}</button></div></div></div>`}
+
+function renderTxList(){const el=document.getElementById('txList');if(currentView!=='log'){el.classList.add('hidden');return}el.classList.remove('hidden');
+  const filtered=historyTab==='all'?transactions:transactions.filter(t=>t.type===historyTab);const sorted=[...filtered].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const counts={all:transactions.length,purchased:getPurchases().length,received:getReceived().length,sent:getSent().length};
+  let h=`<div class="tab-bar">${['all','purchased','received','sent'].map(t=>`<div class="tab ${historyTab===t?'active':''}" onclick="historyTab='${t}';renderAll()">${t.charAt(0).toUpperCase()+t.slice(1)}${counts[t]>0?' ('+counts[t]+')':''}</div>`).join('')}</div>`;
+  if(!sorted.length){h+=`<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">No ${historyTab==='all'?'':historyTab+' '}entries yet.</div>`;el.innerHTML=h;return}
+  const years={};sorted.forEach(e=>{const y=e.date.substring(0,4);if(!years[y])years[y]=[];years[y].push(e)});
+  for(const[year,entries]of Object.entries(years)){h+=`<div style="margin-top:12px;margin-bottom:6px"><span class="mono" style="font-size:13px;font-weight:700">${year}</span></div>`;
+    entries.forEach(e=>{h+=`<div class="entry-row"><div><div style="display:flex;align-items:center;gap:6px"><span style="font-size:13px;font-weight:500">${fD(e.date)}</span><span class="type-badge ${e.type}">${e.type.toUpperCase()}</span></div><div class="mono" style="font-size:11px;color:var(--muted);margin-top:2px">`;
+      if(e.type==='purchased')h+=`${pr(fZ(e.zarSpent))} → ${pr(e.btc.toFixed(8)+' BTC')}`;else if(e.type==='received')h+=`${pr(e.btc.toFixed(8)+' BTC')}${e.from?' from '+e.from:''}`;else if(e.type==='sent')h+=`${pr(e.btc.toFixed(8)+' BTC')}${e.to?' to '+e.to:''}`;
+      h+=`</div></div>`;if(e.type==='purchased'&&e.price>0)h+=`<div class="mono" style="font-size:11px;color:var(--sub)">@ ${pr(fZ(e.price))}</div>`;else if(e.type==='received'&&e.priceAtReceipt>0)h+=`<div class="mono" style="font-size:11px;color:var(--received)">@ ${pr(fZ(e.priceAtReceipt))}</div>`;h+=`</div>`})}
+  el.innerHTML=h}
+
+function renderCycle(){const el=document.getElementById('cycleCard'),cycle=getCycle(),phase=getPhase(cycle.pct),r=50,circ=2*Math.PI*r,offset=circ-(cycle.pct/100)*circ;
+  el.innerHTML=`<div class="label">Halving Cycle</div><div style="display:flex;align-items:center;gap:20px;margin-top:14px"><div style="position:relative;width:120px;height:120px;flex-shrink:0"><svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="${r}" fill="none" stroke="var(--border)" stroke-width="6"/><circle cx="60" cy="60" r="${r}" fill="none" stroke="${phase.color}" stroke-width="6" stroke-dasharray="${circ}" stroke-dashoffset="${offset}" stroke-linecap="round" transform="rotate(-90 60 60)" style="transition:stroke-dashoffset 1.2s ease-out"/></svg><div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><span class="mono" style="font-size:20px;font-weight:700">${Math.round(cycle.pct)}%</span><span style="font-size:9px;color:var(--muted);letter-spacing:.5px">OF CYCLE</span></div></div><div style="flex:1"><div class="serif" style="font-size:20px;color:${phase.color};margin-bottom:4px">${phase.label}</div><div style="font-size:13px;color:var(--sub);line-height:1.5;margin-bottom:8px">${phase.desc}</div><div class="mono" style="font-size:11px;color:var(--muted)">${cycle.daysToNext.toLocaleString()} days to halving</div></div></div><div class="divider"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:10px;color:var(--muted)">Apr 2024</span><span style="font-size:10px;color:var(--muted)">~Mar 2028</span></div><div class="cycle-bar"><div class="cycle-seg" style="left:0;width:25%;background:rgba(37,99,235,.12);border-right:1px solid var(--bg)"></div><div class="cycle-seg" style="left:25%;width:25%;background:rgba(5,150,105,.12);border-right:1px solid var(--bg)"></div><div class="cycle-seg" style="left:50%;width:25%;background:rgba(217,119,6,.12);border-right:1px solid var(--bg)"></div><div class="cycle-seg" style="left:75%;width:25%;background:rgba(220,38,38,.12)"></div><div class="cycle-dot" style="left:${cycle.pct}%;background:${phase.color};box-shadow:0 0 0 2px ${phase.color}30"></div></div></div>`}
+
+function renderAll(){renderPrice();renderSetup();renderHoldings();renderImport();renderTxList();renderCycle();
+  document.getElementById('footerText').textContent=(priceData?'Updated '+new Date().toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'})+' · ':'')+' Not financial advice · Bitcoin only'}
+
+function toggleView(){const btn=document.getElementById('toggleBtn');if(currentView==='dash'){currentView='log';btn.textContent='DASHBOARD';importState.step='choose'}else{currentView='dash';btn.textContent='HISTORY'}renderAll()}
+
+async function fetchPrice(){try{const res=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=zar,usd&include_24hr_change=true');if(!res.ok)throw 0;priceData=(await res.json()).bitcoin;document.getElementById('errorMsg').textContent=''}catch{priceData={zar:1398000,usd:75500,zar_24h_change:1.2,usd_24h_change:.8};document.getElementById('errorMsg').textContent='Estimated data — live feed unavailable'}renderAll()}
+
+load();if(setupDone)document.getElementById('toggleBtn').classList.remove('hidden');
+renderCycle();fetchPrice();setInterval(fetchPrice,60000);
+
+// ─── PWA Service Worker ───
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>

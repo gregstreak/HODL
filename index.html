@@ -111,7 +111,7 @@ let setupDone=false;
 
 // ─── Storage ───
 function save(){try{localStorage.setItem('hodl-data',JSON.stringify({holdings,transactions,setupDone}))}catch{}}
-function load(){try{const d=JSON.parse(localStorage.getItem('hodl-data'));if(d){holdings=d.holdings||holdings;transactions=d.transactions||[];setupDone=d.setupDone||false;if(holdings.other===undefined)holdings.other=0}}catch{}}
+function load(){try{const d=JSON.parse(localStorage.getItem('hodl-data'));if(d){holdings=d.holdings||holdings;transactions=d.transactions||[];setupDone=d.setupDone||false;if(holdings.other===undefined)holdings.other=0}privacyOn=localStorage.getItem('hodl-privacy')==='true'}catch{}}
 
 // ─── Exchange Parsers ───
 const EXCHANGES={
@@ -146,7 +146,7 @@ function getPurchases(){return transactions.filter(t=>t.type==='purchased')}
 function getReceived(){return transactions.filter(t=>t.type==='received')}
 function getSent(){return transactions.filter(t=>t.type==='sent')}
 function getTI(){return getPurchases().reduce((s,e)=>s+e.zarSpent,0)}
-function togglePrivacy(){privacyOn=!privacyOn;document.getElementById('eyeOpen').classList.toggle('hidden',privacyOn);document.getElementById('eyeClosed').classList.toggle('hidden',!privacyOn);renderAll()}
+function togglePrivacy(){privacyOn=!privacyOn;localStorage.setItem('hodl-privacy',privacyOn);document.getElementById('eyeOpen').classList.toggle('hidden',privacyOn);document.getElementById('eyeClosed').classList.toggle('hidden',!privacyOn);renderAll()}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
 
 // ─── CSV ───
@@ -277,6 +277,7 @@ function toggleView(){const btn=document.getElementById('toggleBtn');if(currentV
 async function fetchPrice(){try{const res=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=zar,usd&include_24hr_change=true');if(!res.ok)throw 0;priceData=(await res.json()).bitcoin;document.getElementById('errorMsg').textContent=''}catch{priceData={zar:1398000,usd:75500,zar_24h_change:1.2,usd_24h_change:.8};document.getElementById('errorMsg').textContent='Estimated data — live feed unavailable'}renderAll()}
 
 load();if(setupDone)document.getElementById('toggleBtn').classList.remove('hidden');
+document.getElementById('eyeOpen').classList.toggle('hidden',privacyOn);document.getElementById('eyeClosed').classList.toggle('hidden',!privacyOn);
 renderCycle();fetchPrice();setInterval(fetchPrice,60000);
 
 // ─── PWA Service Worker ───

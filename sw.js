@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hodl-v1';
+const CACHE_NAME = 'hodl-v2';
 const ASSETS = [
   '/',
   '/index.html',
